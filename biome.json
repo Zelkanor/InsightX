@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!**/globals.css"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -20,6 +27,17 @@
       "recommended": true,
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "error"
+      },
+
+      "style": {
+        "useImportType": "warn"
+      },
+
+      "complexity": {
+        "noImportantStyles": "off"
       }
     },
     "domains": {
@@ -27,6 +45,7 @@
       "react": "recommended"
     }
   },
+
   "assist": {
     "actions": {
       "source": {
