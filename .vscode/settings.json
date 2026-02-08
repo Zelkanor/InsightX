@@ -2,6 +2,8 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
+  "prettier.enable": false,
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "always",
     "source.organizeImports.biome": "always"
