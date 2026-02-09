@@ -397,6 +397,10 @@
   overflow: hidden !important;
 }
 
+.tradingview-widget-container *  {
+  border-color: transparent !important;
+}
+
 .tv-embed-widget-wrapper__body {
   background-color: #141414 !important;
 }
@@ -452,7 +456,7 @@
 }
 
 .custom-chart.tradingview-widget-container iframe {
-  border: 1px solid #30333A;
+  border: 1px solid #30333A !important;
   border-radius: 8px !important;
   overflow: hidden !important;
 }
