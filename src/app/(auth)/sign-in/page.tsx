@@ -53,7 +53,13 @@ const SignIn = () => {
           register={register}
           type="password"
           error={errors.password}
-          validation={{ required: "Password is required", minLength: 8 }}
+          validation={{
+            required: "Password is required",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters",
+            },
+          }}
         />
         <Button
           type="submit"
