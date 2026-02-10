@@ -27,11 +27,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <cite className="auth-testimonial-author">- Ethan R.</cite>
               <p className="max-md:text-xs text-gray-500">Retail Investor</p>
             </div>
-            <div className="flex items-center gap-0.5">
+            <div
+              className="flex items-center gap-0.5"
+              role="img"
+              aria-label="5-star rating"
+            >
               {[1, 2, 3, 4, 5].map((star) => (
                 <Image
                   src="/assets/icons/star.svg"
-                  alt="Star"
+                  alt=""
+                  aria-hidden="true"
                   width={20}
                   height={20}
                   key={star}

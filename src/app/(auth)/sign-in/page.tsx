@@ -19,7 +19,9 @@ const SignIn = () => {
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      console.log("Form data:", data);
+      if (process.env.NODE_ENV === "development") {
+        console.debug("Form data:", data);
+      }
     } catch (e) {
       console.error("Sign-in error:", e);
     }
@@ -34,11 +36,14 @@ const SignIn = () => {
           label="Email"
           placeholder="contact@example.com"
           register={register}
+          type="email"
           error={errors.email}
           validation={{
             required: "Email is required",
-            pattern: /^\S+@\S+$/,
-            message: "Email address is required",
+            pattern: {
+              value: /^\S+@\S+$/i,
+              message: "Please enter a valid email address",
+            },
           }}
         />
         <InputField

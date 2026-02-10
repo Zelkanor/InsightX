@@ -1,3 +1,4 @@
+import type { FieldValues } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import {
   Select,
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "../ui/label";
 
-const SelectField = ({
+const SelectField = <T extends FieldValues>({
   name,
   label,
   placeholder,
@@ -16,7 +17,7 @@ const SelectField = ({
   control,
   error,
   required = false,
-}: SelectFieldProps) => {
+}: SelectFieldProps<T>) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={name} className="form-label">
@@ -27,7 +28,7 @@ const SelectField = ({
         name={name}
         control={control}
         rules={{
-          required: required ? `Please select ${label.toLowerCase}` : false,
+          required: required ? `Please select ${label.toLowerCase()}` : false,
         }}
         render={({ field }) => (
           <Select value={field.value} onValueChange={field.onChange}>

@@ -22,7 +22,7 @@ const SignUp = () => {
       fullName: "",
       email: "",
       password: "",
-      country: "India",
+      country: "IN",
       investmentGoals: "Growth",
       riskTolerance: "Medium",
       preferredIndustry: "Technology",
@@ -32,7 +32,9 @@ const SignUp = () => {
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      console.log("Form data:", data);
+      if (process.env.NODE_ENV === "development") {
+        console.debug("Form data:", data);
+      }
     } catch (e) {
       console.error("Sign-up error:", e);
     }
@@ -54,12 +56,15 @@ const SignUp = () => {
           name="email"
           label="Email"
           placeholder="contact@example.com"
+          type="email"
           register={register}
           error={errors.email}
           validation={{
             required: "Email is required",
-            pattern: /^\S+@\S+$/,
-            message: "Email address is required",
+            pattern: {
+              value: /^\S+@\S+$/i,
+              message: "Please enter a valid email address",
+            },
           }}
         />
         <InputField

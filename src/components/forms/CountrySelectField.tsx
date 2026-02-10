@@ -1,5 +1,6 @@
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { FieldValues } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import countryList from "react-select-country-list";
 import {
@@ -100,13 +101,13 @@ const CountrySelect = ({
   );
 };
 
-const CountrySelectField = ({
+const CountrySelectField = <T extends FieldValues>({
   name,
   label,
   control,
   error,
   required = false,
-}: CountrySelectProps) => {
+}: CountrySelectProps<T>) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={name} className="form-label">

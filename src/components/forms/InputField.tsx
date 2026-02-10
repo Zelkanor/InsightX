@@ -1,8 +1,9 @@
+import type { FieldValues } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-const InputField = ({
+const InputField = <T extends FieldValues>({
   name,
   label,
   placeholder,
@@ -11,8 +12,7 @@ const InputField = ({
   error,
   validation,
   disabled = false,
-  value,
-}: FormInputProps) => {
+}: FormInputProps<T>) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={name} className="form-label">
@@ -23,7 +23,6 @@ const InputField = ({
         id={name}
         placeholder={placeholder}
         disabled={disabled}
-        value={value}
         className={cn("form-input", {
           "opacity-50 cursor-not-allowed": disabled,
         })}
