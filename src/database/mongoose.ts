@@ -9,18 +9,18 @@ declare global {
   };
 }
 
-const cached = global.mongooseCache;
-
-if (!cached) {
+if (!global.mongooseCache) {
   global.mongooseCache = { conn: null, promise: null };
 }
+
+const cached = global.mongooseCache;
 
 export const connectToDatabase = async () => {
   if (!MONGODB_URI) {
     throw new Error("Please define the MONGODB_URI environment variable");
   }
 
-  if (!cached.conn) {
+  if (cached.conn) {
     return cached.conn;
   }
 
@@ -38,4 +38,6 @@ export const connectToDatabase = async () => {
   if (process.env.NODE_ENV === "development") {
     console.debug("Connected to MongoDB");
   }
+
+  return cached.conn;
 };
