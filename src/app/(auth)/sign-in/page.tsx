@@ -23,21 +23,15 @@ const SignIn = () => {
   const router = useRouter();
 
   const onSubmit = async (data: SignInFormData) => {
-    try {
-      if (process.env.NODE_ENV === "development") {
-        console.debug("Form data:", data);
-      }
-      const result = await signInWithEmail(data);
-      if (result.success) router.push("/");
-    } catch (e) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Sign-in error:", e);
-      }
+    if (process.env.NODE_ENV === "development") {
+      console.debug("Form data:", data);
+    }
+    const result = await signInWithEmail(data);
+    if (result.success) {
+      router.push("/");
+    } else {
       toast.error("Sign-in failed", {
-        description:
-          e instanceof Error
-            ? e.message
-            : "Failed to sign in. Please try again.",
+        description: result.error || "Failed to sign in. Please try again.",
       });
     }
   };

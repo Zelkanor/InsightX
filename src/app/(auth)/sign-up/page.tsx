@@ -36,19 +36,17 @@ const SignUp = () => {
   const router = useRouter();
 
   const onSubmit = async (data: SignUpFormData) => {
-    try {
-      if (process.env.NODE_ENV === "development") {
-        console.debug("Form data:", data);
-      }
-      const result = await signUpWithEmail(data);
-      if (result.success) router.push("/");
-    } catch (e) {
-      console.error("Sign-up error:", e);
+    if (process.env.NODE_ENV === "development") {
+      // biome-ignore lint/correctness/noUnusedVariables: We want to log the form data without the password for debugging purposes
+      const { password, ...safeData } = data;
+      console.debug("Form data:", safeData);
+    }
+    const result = await signUpWithEmail(data);
+    if (result.success) {
+      router.push("/");
+    } else {
       toast.error("Sign-up failed", {
-        description:
-          e instanceof Error
-            ? e.message
-            : "Failed to sign up. Please try again.",
+        description: result.error || "Failed to sign up. Please try again.",
       });
     }
   };

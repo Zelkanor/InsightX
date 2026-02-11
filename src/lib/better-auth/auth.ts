@@ -9,6 +9,13 @@ let authInstance: ReturnType<typeof betterAuth> | null = null;
 export const getAuth = async () => {
   if (authInstance) return authInstance;
 
+  if (!process.env.BETTER_AUTH_SECRET) {
+    throw new Error("BETTER_AUTH_SECRET environment variable is required");
+  }
+  if (!process.env.BETTER_AUTH_URL) {
+    throw new Error("BETTER_AUTH_URL environment variable is required");
+  }
+
   const mongoose = await connectToDatabase();
 
   const db = mongoose.connection.db;

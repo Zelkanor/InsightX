@@ -13,9 +13,20 @@ export const signUpWithEmail = async ({
   preferredIndustry,
 }: SignUpFormData) => {
   try {
+    if (!auth?.api?.signUpEmail) {
+      return {
+        success: false,
+        error: "Auth not initialized. Please try again.",
+      };
+    }
+
     const response = await auth?.api.signUpEmail({
       body: { email, password, name: fullName },
     });
+
+    if (!response) {
+      return { success: false, error: "Sign Up failed. Please try again." };
+    }
 
     if (response) {
       await inngest.send({
@@ -30,7 +41,6 @@ export const signUpWithEmail = async ({
         },
       });
     }
-
     return { success: true, data: response };
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -60,6 +70,7 @@ export const signInWithEmail = async ({ email, password }: SignInFormData) => {
 export const signOut = async () => {
   try {
     await auth?.api.signOut({ headers: await headers() });
+    return { success: true };
   } catch (e) {
     if (process.env.NODE_ENV === "development") {
       console.error("Sign-out error:", e);
