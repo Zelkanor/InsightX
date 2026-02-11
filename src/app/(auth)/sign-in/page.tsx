@@ -1,8 +1,11 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import FooterLink from "@/components/forms/FooterLink";
 import InputField from "@/components/forms/InputField";
 import { Button } from "@/components/ui/button";
+import { signInWithEmail } from "@/lib/actions/auth.actions";
 
 const SignIn = () => {
   const {
@@ -17,13 +20,21 @@ const SignIn = () => {
     mode: "onBlur",
   });
 
+  const router = useRouter();
+
   const onSubmit = async (data: SignInFormData) => {
-    try {
-      if (process.env.NODE_ENV === "development") {
-        console.debug("Form data:", data);
-      }
-    } catch (e) {
-      console.error("Sign-in error:", e);
+    if (process.env.NODE_ENV === "development") {
+      // biome-ignore lint/correctness/noUnusedVariables: We want to log the form data without the password for debugging purposes
+      const { password, ...safeData } = data;
+      console.debug("Form data:", safeData);
+    }
+    const result = await signInWithEmail(data);
+    if (result.success) {
+      router.push("/");
+    } else {
+      toast.error("Sign-in failed", {
+        description: result.error || "Failed to sign in. Please try again.",
+      });
     }
   };
 
