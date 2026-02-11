@@ -57,6 +57,10 @@ export const signInWithEmail = async ({ email, password }: SignInFormData) => {
       body: { email, password },
     });
 
+    if (!response) {
+      return { success: false, error: "Sign In failed. Please try again." };
+    }
+
     return { success: true, data: response };
   } catch (error) {
     if (process.env.NODE_ENV === "development") {

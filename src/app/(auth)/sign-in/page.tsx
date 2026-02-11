@@ -24,7 +24,9 @@ const SignIn = () => {
 
   const onSubmit = async (data: SignInFormData) => {
     if (process.env.NODE_ENV === "development") {
-      console.debug("Form data:", data);
+      // biome-ignore lint/correctness/noUnusedVariables: We want to log the form data without the password for debugging purposes
+      const { password, ...safeData } = data;
+      console.debug("Form data:", safeData);
     }
     const result = await signInWithEmail(data);
     if (result.success) {
