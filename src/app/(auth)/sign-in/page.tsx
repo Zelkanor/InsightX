@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import FooterLink from "@/components/forms/FooterLink";
 import InputField from "@/components/forms/InputField";
 import { Button } from "@/components/ui/button";
-import { signInWithEmail } from "@/lib/actions/auth.actions";
+import { signInWithEmail } from "@/lib/actions/auth.action";
 
 const SignIn = () => {
   const {

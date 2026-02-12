@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/actions/auth.actions";
+import { signOut } from "@/lib/actions/auth.action";
 
 const UserDropDown = ({ user }: { user: User }) => {
   const router = useRouter();
