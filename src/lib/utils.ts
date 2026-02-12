@@ -100,13 +100,14 @@ export const formatArticle = (
 });
 
 export const formatChangePercent = (changePercent?: number) => {
-  if (!changePercent) return "";
+  if (changePercent === undefined || changePercent === null) return "";
   const sign = changePercent > 0 ? "+" : "";
   return `${sign}${changePercent.toFixed(2)}%`;
 };
 
 export const getChangeColorClass = (changePercent?: number) => {
-  if (!changePercent) return "text-gray-400";
+  if (changePercent === undefined || changePercent === null)
+    return "text-gray-400";
   return changePercent > 0 ? "text-green-500" : "text-red-500";
 };
 
@@ -117,14 +118,6 @@ export const formatPrice = (price: number) => {
     minimumFractionDigits: 2,
   }).format(price);
 };
-
-export const formatDateToday = new Date().toLocaleDateString("en-US", {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 export const getAlertText = (alert: Alert) => {
   const condition = alert.alertType === "upper" ? ">" : "<";
