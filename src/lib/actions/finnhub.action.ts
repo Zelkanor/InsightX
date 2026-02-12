@@ -194,6 +194,8 @@ export async function searchStocks(
         const exchangeFromProfile = r.__exchange;
         const exchange = parsedExchange || exchangeFromProfile || "US";
         const type = r.type || "Stock";
+        //TODO: Is In Watchlist status will require another API call or database check, which we can implement later.
+        // For now, default to false.
         const item: StockWithWatchlistStatus = {
           symbol: upper,
           name,
