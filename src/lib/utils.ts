@@ -132,3 +132,11 @@ export const getFormattedTodayDate = () =>
     day: "numeric",
     timeZone: "UTC",
   });
+
+// ── Rate-limit error ────────────────────────────────────────────────
+export class RateLimitError extends Error {
+  constructor(message = "API rate limit exceeded. Please try again later.") {
+    super(message);
+    this.name = "RateLimitError";
+  }
+}

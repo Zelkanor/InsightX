@@ -10,7 +10,8 @@ import {
 } from "@/database/models/watchlist.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { auth } from "@/lib/better-auth/auth";
-import { getStocksDetails, RateLimitError } from "./finnhub.action";
+import { RateLimitError } from "../utils";
+import { getStocksDetails } from "./finnhub.action";
 
 /**
  * Get the authenticated user's ObjectId or redirect to sign-in.

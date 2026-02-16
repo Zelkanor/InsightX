@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -10,14 +11,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AlertDialog from "@/components/watchlist/AlertDialog";
 import WatchlistButton from "@/components/watchlist/WatchlistButton";
 import { WATCHLIST_TABLE_HEADER } from "@/lib/constants";
 import { cn, getChangeColorClass } from "@/lib/utils";
 
 export function WatchlistTable({ watchlist }: WatchlistTableProps) {
   const router = useRouter();
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertStock, setAlertStock] = useState<{
+    symbol: string;
+    company: string;
+    price?: number;
+  } | null>(null);
+
+  const handleAddAlert = (item: StockWithData) => {
+    setAlertStock({
+      symbol: item.symbol,
+      company: item.company,
+      price: item.currentPrice,
+    });
+    setAlertOpen(true);
+  };
 
   return (
+  <>
     <Table className="scrollbar-hide-default watchlist-table">
       <TableHeader>
         <TableRow className="table-header-row">
@@ -74,7 +92,10 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
             <TableCell>
               <Button
                 className="add-alert"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddAlert(item);
+                }}
                 onKeyDown={(e) => e.stopPropagation()}
               >
                 Add Alert
@@ -84,5 +105,16 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
         ))}
       </TableBody>
     </Table>
+
+    {alertStock && (
+      <AlertDialog
+        open={alertOpen}
+        setOpen={setAlertOpen}
+        defaultSymbol={alertStock.symbol}
+        defaultCompany={alertStock.company}
+        defaultPrice={alertStock.price}
+      />
+    )}
+  </>
   );
 }

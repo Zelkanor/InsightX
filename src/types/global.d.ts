@@ -159,6 +159,7 @@ declare global {
 
   type AlertsListProps = {
     alertData: Alert[] | undefined;
+    watchlistStocks: Array<{ symbol: string; company: string }>;
   };
 
   type MarketNewsArticle = {
@@ -186,20 +187,25 @@ declare global {
     className?: string;
   };
 
-  type AlertData = {
+  type AlertFormData = {
     symbol: string;
     companyName: string;
-    alertName: string;
     condition: "above" | "below";
-    threshold: number;
+    targetPrice: number;
+    frequency: string;
   };
 
-  type AlertModalProps = {
-    alertId?: string;
-    alertData?: AlertData;
-    action?: string;
+  type AlertDialogProps = {
     open: boolean;
     setOpen: (open: boolean) => void;
+    /** Pre-fill for creating from a specific stock row */
+    defaultSymbol?: string;
+    defaultCompany?: string;
+    defaultPrice?: number;
+    /** For editing an existing alert */
+    editAlert?: Alert;
+    /** User's watchlist stocks for the stock picker when no symbol is provided */
+    watchlistStocks?: Array<{ symbol: string; company: string }>;
   };
 
   type RawNewsArticle = {
@@ -218,10 +224,10 @@ declare global {
     id: string;
     symbol: string;
     companyName: string;
-    alertName: string;
-    currentPrice: number;
     condition: "above" | "below";
     threshold: number;
-    changePercent?: number;
+    frequency: string;
+    isActive: boolean;
+    createdAt: string;
   };
 }

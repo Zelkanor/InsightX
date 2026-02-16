@@ -1,7 +1,12 @@
 "use client";
 
 import { Bell, Pencil, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
+import { deleteAlert } from "@/lib/actions/alerts.action";
 import { formatPrice } from "@/lib/utils";
+import AlertDialog from "./AlertDialog";
 
 const FREQUENCY_LABELS: Record<string, string> = {
   once: "Once",
@@ -21,12 +26,38 @@ const SYMBOL_COLORS: Record<string, string> = {
   NVDA: "bg-teal-400/20",
 };
 
-export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
+export const AlertsSidebar = ({
+  alertData,
+  watchlistStocks,
+}: AlertsListProps) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<Alert | undefined>();
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+
+  const handleCreate = () => {
+    setEditingAlert(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (alert: Alert) => {
+    setEditingAlert(alert);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (alertId: string) => {
+    const result = await deleteAlert(alertId);
+    if (result.success) {
+      toast.success("Alert deleted");
+    } else {
+      toast.error(result.error || "Failed to delete alert");
+    }
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between w-full ">
+      <div className="flex items-center justify-between w-full">
         <h2 className="watchlist-title">Alerts</h2>
-        <button type="button" className="search-btn">
+        <button type="button" className="search-btn" onClick={handleCreate}>
           <Bell className="h-3.5 w-3.5" />
           Create Alert
         </button>
@@ -35,72 +66,78 @@ export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
       {alertData && alertData.length > 0 ? (
         <div className="alert-list scrollbar-hide-default">
           {alertData.map((alert) => {
-            const isPositive = (alert.changePercent ?? 0) >= 0;
             const condition = alert.condition === "above" ? ">" : "<";
             const bgColor = SYMBOL_COLORS[alert.symbol] ?? "bg-gray-600";
 
             return (
               <div key={alert.id} className="alert-item">
-                {/* Header: icon + company + symbol + change */}
+                {/* Header: icon + company + symbol */}
                 <div className="alert-details">
                   <div className="flex items-center gap-3">
                     <span
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${bgColor}`}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold overflow-hidden ${bgColor}`}
                     >
-                      {alert.symbol.charAt(0)}
+                      {!imgErrors[alert.symbol] ? (
+                        <Image
+                          src={`https://assets.parqet.com/logos/symbol/${alert.symbol}?format=png`}
+                          alt={alert.symbol}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                          onError={() =>
+                            setImgErrors((prev) => ({
+                              ...prev,
+                              [alert.symbol]: true,
+                            }))
+                          }
+                        />
+                      ) : (
+                        alert.symbol.charAt(0)
+                      )}
                     </span>
                     <div>
                       <p className="alert-company">{alert.companyName}</p>
-                      <p className="alert-price">
-                        {alert.currentPrice
-                          ? formatPrice(alert.currentPrice)
-                          : "—"}
+                      <p className="text-sm font-mono text-gray-400">
+                        {alert.symbol}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-mono text-gray-400">
-                      {alert.symbol}
-                    </p>
-                    <p
-                      className={`text-sm font-semibold ${
-                        isPositive ? "text-green-400" : "text-red-400"
-                      }`}
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${alert.isActive ? "bg-green-500/20 text-green-400" : "bg-gray-600/50 text-gray-500"}`}
                     >
-                      {isPositive ? "+" : ""}
-                      {alert.changePercent?.toFixed(2) ?? "0.00"}%
-                    </p>
+                      {alert.isActive ? "Active" : "Inactive"}
+                    </span>
                   </div>
                 </div>
 
                 {/* Alert details + actions */}
                 <div className="alert-actions">
                   <div>
-                    <p className="text-sm text-gray-500">{alert.alertName}:</p>
                     <p className="text-sm font-medium text-gray-300">
                       Price {condition} {formatPrice(alert.threshold)}
                     </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div>
-                      <button
-                        type="button"
-                        className="alert-update-btn p-1.5"
-                        title="Edit alert"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        className="alert-delete-btn p-1.5"
-                        title="Delete alert"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                    <span className="ml-2 text-xs px-2 py-1 rounded bg-gray-600/50 text-gray-400 whitespace-nowrap">
-                      {FREQUENCY_LABELS.once_per_day}
+                    <span className="text-xs px-2 py-0.5 rounded bg-gray-600/50 text-gray-400">
+                      {FREQUENCY_LABELS[alert.frequency] ?? alert.frequency}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      className="alert-update-btn p-1.5"
+                      title="Edit alert"
+                      onClick={() => handleEdit(alert)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      className="alert-delete-btn p-1.5"
+                      title="Delete alert"
+                      onClick={() => handleDelete(alert.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -109,8 +146,8 @@ export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
         </div>
       ) : (
         <div className="alert-list">
-          <div className="alert-empty">
-            <Bell className="h-5 w-5" />
+          <div className="alert-empty text-center flex flex-col items-center">
+            <Bell className="h-5 w-5 mb-2" />
             <h2 className="empty-title">Your alerts are empty</h2>
             <p className="empty-description">
               No alerts yet. Create one to get started.
@@ -118,6 +155,13 @@ export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={dialogOpen}
+        setOpen={setDialogOpen}
+        editAlert={editingAlert}
+        watchlistStocks={watchlistStocks}
+      />
     </>
   );
 };

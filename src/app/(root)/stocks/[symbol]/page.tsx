@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import WatchlistButton from "@/components/watchlist/WatchlistButton";
 import type { IWatchlistItem } from "@/database/models/watchlist.model";
-import { getStocksDetails, RateLimitError } from "@/lib/actions/finnhub.action";
+import { getStocksDetails } from "@/lib/actions/finnhub.action";
 import { getUserWatchlist } from "@/lib/actions/watchlist.action";
 import {
   BASELINE_WIDGET_CONFIG,
@@ -12,6 +12,7 @@ import {
   SYMBOL_INFO_WIDGET_CONFIG,
   TECHNICAL_ANALYSIS_WIDGET_CONFIG,
 } from "@/lib/constants";
+import { RateLimitError } from "@/lib/utils";
 
 export default async function StockDetails({ params }: StockDetailsPageProps) {
   const { symbol } = await params;
