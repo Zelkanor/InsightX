@@ -16,10 +16,11 @@ export default function ErrorBoundary({
 }: ErrorBoundaryProps) {
   useEffect(() => {
     const isRateLimit =
-      error.message.includes("rate limit") ||
-      error.message.includes("Rate");
+      error.message.includes("rate limit") || error.message.includes("Rate");
     toast.error(
-      isRateLimit ? "API rate limit exceeded. Try again later." : fallbackMessage,
+      isRateLimit
+        ? "API rate limit exceeded. Try again later."
+        : fallbackMessage,
     );
   }, [error, fallbackMessage]);
 

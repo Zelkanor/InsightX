@@ -79,8 +79,10 @@ export default function AlertDialog({
 
   // Derive symbol/company from the stock picker or props
   const getSymbolAndCompany = () => {
-    if (editAlert) return { symbol: editAlert.symbol, company: editAlert.companyName };
-    if (defaultSymbol) return { symbol: defaultSymbol, company: defaultCompany };
+    if (editAlert)
+      return { symbol: editAlert.symbol, company: editAlert.companyName };
+    if (defaultSymbol)
+      return { symbol: defaultSymbol, company: defaultCompany };
     if (selectedStock) {
       const [sym, ...rest] = selectedStock.split("|");
       return { symbol: sym, company: rest.join("|") };

@@ -1,17 +1,19 @@
 import { Star } from "lucide-react";
 import SearchCommand from "@/components/SearchCommand";
 import { AlertsSidebar } from "@/components/watchlist/AlertsSidebar";
-// import { WatchlistNews } from "@/components/watchlist/WatchlistNews";
+import { WatchlistNews } from "@/components/watchlist/WatchlistNews";
 import { WatchlistTable } from "@/components/watchlist/WatchlistTable";
 import { getUserAlerts } from "@/lib/actions/alerts.action";
 import { searchStocks } from "@/lib/actions/finnhub.action";
+import { getWatchlistNews } from "@/lib/actions/news.action";
 import { getWatchlistWithData } from "@/lib/actions/watchlist.action";
 
 export default async function WatchlistPage() {
-  const [watchlist, alerts, initialStocks] = await Promise.all([
+  const [watchlist, alerts, initialStocks, news] = await Promise.all([
     getWatchlistWithData(),
     getUserAlerts(),
     searchStocks(),
+    getWatchlistNews(),
   ]);
 
   if (watchlist.length === 0) {
@@ -60,7 +62,7 @@ export default async function WatchlistPage() {
       </div>
 
       {/* Bottom: News */}
-      {/* <WatchlistNews news={DUMMY_NEWS} /> */}
+      <WatchlistNews news={news} />
     </div>
   );
 }

@@ -55,8 +55,7 @@ export default function SearchCommand({
       setStocks(results);
     } catch (error) {
       setStocks([]);
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       if (message.includes("rate limit") || message.includes("Rate")) {
         toast.error("API limit exceeded. Please try again later.");
       }
