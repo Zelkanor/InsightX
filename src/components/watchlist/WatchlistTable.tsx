@@ -58,6 +58,15 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
               }
               onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
                 if (e.key === "Enter" || e.key === " ") {
+                  const target = e.target as HTMLElement;
+                  if (
+                    target !== e.currentTarget ||
+                    target.closest(
+                      'button, [role="button"], a, input, select, textarea, [tabindex]:not(tr)',
+                    )
+                  ) {
+                    return;
+                  }
                   e.preventDefault();
                   router.push(`/stocks/${encodeURIComponent(item.symbol)}`);
                 }

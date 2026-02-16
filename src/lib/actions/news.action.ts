@@ -15,12 +15,12 @@ const MAX_NEWS_ARTICLES = 6;
  * Returns at most 6 articles.
  */
 export async function getWatchlistNews(): Promise<MarketNewsArticle[]> {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-    if (!session?.user) redirect("/sign-in");
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) redirect("/sign-in");
 
+  try {
     const symbols = await getWatchlistSymbolsByEmail(session.user.email);
 
     const articles = await getNews(
