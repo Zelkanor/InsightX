@@ -18,6 +18,61 @@ import { getWatchlistSymbolsByEmail } from "./watchlist.action";
 
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 
+// ── Rate-limit error ────────────────────────────────────────────────
+export class RateLimitError extends Error {
+  constructor(message = "API rate limit exceeded. Please try again later.") {
+    super(message);
+    this.name = "RateLimitError";
+  }
+}
+
+// ── Concurrency limiter (p-limit style) ─────────────────────────────
+function createConcurrencyLimiter(concurrency: number) {
+  let active = 0;
+  const queue: Array<() => void> = [];
+
+  function next() {
+    if (queue.length > 0 && active < concurrency) {
+      active++;
+      const run = queue.shift();
+      if (run) run();
+    }
+  }
+
+  return function limit<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      queue.push(() => {
+        fn()
+          .then(resolve)
+          .catch(reject)
+          .finally(() => {
+            active--;
+            next();
+          });
+      });
+      next();
+    });
+  };
+}
+
+// Shared limiter for Finnhub requests (max 8 concurrent)
+const finnhubLimit = createConcurrencyLimiter(8);
+
+// ── In-memory quote cache (30s TTL) ─────────────────────────────────
+const quoteCache = new Map<string, { data: QuoteData; expiresAt: number }>();
+const QUOTE_CACHE_TTL_MS = 30_000;
+
+function getCachedQuote(symbol: string): QuoteData | null {
+  const entry = quoteCache.get(symbol);
+  if (entry && Date.now() < entry.expiresAt) return entry.data;
+  if (entry) quoteCache.delete(symbol);
+  return null;
+}
+
+function setCachedQuote(symbol: string, data: QuoteData): void {
+  quoteCache.set(symbol, { data, expiresAt: Date.now() + QUOTE_CACHE_TTL_MS });
+}
+
 type FinnhubProfile = {
   name?: string;
   ticker?: string;
@@ -31,18 +86,36 @@ type FinnhubSearchResultWithExchange = FinnhubSearchResult & {
 export async function fetchJSON<T>(
   url: string,
   revalidateSeconds?: number,
+  maxRetries = 2,
 ): Promise<T> {
   const options: RequestInit & { next?: { revalidate?: number } } =
     revalidateSeconds
       ? { cache: "force-cache", next: { revalidate: revalidateSeconds } }
       : { cache: "no-store" };
 
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Fetch failed ${res.status}: ${text}`);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, options);
+
+    if (res.status === 429) {
+      // On last attempt, throw rate-limit error
+      if (attempt === maxRetries) {
+        throw new RateLimitError();
+      }
+      // Exponential backoff: 1s, 2s
+      const backoff = 1000 * 2 ** attempt;
+      await new Promise((r) => setTimeout(r, backoff));
+      continue;
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Fetch failed ${res.status}: ${text}`);
+    }
+    return (await res.json()) as T;
   }
-  return (await res.json()) as T;
+
+  // Should not reach here, but satisfy TS
+  throw new Error("fetchJSON: unexpected retry loop exit");
 }
 
 export async function getNews(
@@ -217,6 +290,7 @@ export const searchStocks = cache(
 
       return mapped;
     } catch (err) {
+      if (err instanceof RateLimitError) throw err;
       console.error("Error in stock search:", err);
       return [];
     }
@@ -238,20 +312,30 @@ export const getStocksDetails = cache(async (symbol: string) => {
   }
 
   try {
+    // Use cached quote if available
+    const cachedQuote = getCachedQuote(cleanSymbol);
+
     const [quote, profile, financials] = await Promise.all([
-      fetchJSON(
-        // Price data - no caching for accuracy
-        `${FINNHUB_BASE_URL}/quote?symbol=${cleanSymbol}&token=${token}`,
+      cachedQuote
+        ? Promise.resolve(cachedQuote)
+        : finnhubLimit(() =>
+            fetchJSON<QuoteData>(
+              `${FINNHUB_BASE_URL}/quote?symbol=${cleanSymbol}&token=${token}`,
+            ),
+          ),
+      finnhubLimit(() =>
+        fetchJSON<ProfileData>(
+          // Company info - cache 1hr (rarely changes)
+          `${FINNHUB_BASE_URL}/stock/profile2?symbol=${cleanSymbol}&token=${token}`,
+          3600,
+        ),
       ),
-      fetchJSON(
-        // Company info - cache 1hr (rarely changes)
-        `${FINNHUB_BASE_URL}/stock/profile2?symbol=${cleanSymbol}&token=${token}`,
-        3600,
-      ),
-      fetchJSON(
-        // Financial metrics (P/E, etc.) - cache 30min
-        `${FINNHUB_BASE_URL}/stock/metric?symbol=${cleanSymbol}&metric=all&token=${token}`,
-        1800,
+      finnhubLimit(() =>
+        fetchJSON<FinancialsData>(
+          // Financial metrics (P/E, etc.) - cache 30min
+          `${FINNHUB_BASE_URL}/stock/metric?symbol=${cleanSymbol}&metric=all&token=${token}`,
+          1800,
+        ),
       ),
     ]);
 
@@ -259,6 +343,9 @@ export const getStocksDetails = cache(async (symbol: string) => {
     const quoteData = quote as QuoteData;
     const profileData = profile as ProfileData;
     const financialsData = financials as FinancialsData;
+
+    // Cache the fresh quote
+    if (!cachedQuote) setCachedQuote(cleanSymbol, quoteData);
 
     // Check if we got valid quote and profile data
     if (!quoteData?.c || !profileData?.name)
@@ -280,6 +367,8 @@ export const getStocksDetails = cache(async (symbol: string) => {
       ),
     };
   } catch (error) {
+    // Re-throw rate limit errors so callers can show appropriate UI
+    if (error instanceof RateLimitError) throw error;
     console.error(`Error fetching details for ${cleanSymbol}:`, error);
     throw new Error("Failed to fetch stock details");
   }

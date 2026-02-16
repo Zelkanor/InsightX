@@ -10,7 +10,7 @@ import {
 } from "@/database/models/watchlist.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { auth } from "@/lib/better-auth/auth";
-import { getStocksDetails } from "./finnhub.action";
+import { getStocksDetails, RateLimitError } from "./finnhub.action";
 
 /**
  * Get the authenticated user's ObjectId or redirect to sign-in.
@@ -194,13 +194,45 @@ export const getWatchlistWithData = async () => {
       (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
     );
 
-    const stocksWithData = await Promise.all(
-      sorted.map(async (item) => {
-        try {
-          const stockData = await getStocksDetails(item.symbol);
+    // Process in chunks of 5 to limit concurrent Finnhub requests
+    const CHUNK_SIZE = 5;
+    const stocksWithData = [];
 
-          // Fallback if Finnhub data is unavailable
-          if (!stockData) {
+    for (let i = 0; i < sorted.length; i += CHUNK_SIZE) {
+      const chunk = sorted.slice(i, i + CHUNK_SIZE);
+      const chunkResults = await Promise.all(
+        chunk.map(async (item) => {
+          try {
+            const stockData = await getStocksDetails(item.symbol);
+
+            if (!stockData) {
+              return {
+                symbol: item.symbol,
+                company: item.companyName,
+                currentPrice: null,
+                priceFormatted: "N/A",
+                changeFormatted: "N/A",
+                changePercent: null,
+                marketCap: "N/A",
+                peRatio: null,
+                addedAt: item.addedAt,
+              };
+            }
+
+            return {
+              company: stockData.company,
+              symbol: stockData.symbol,
+              currentPrice: stockData.currentPrice,
+              priceFormatted: stockData.priceFormatted,
+              changeFormatted: stockData.changeFormatted,
+              changePercent: stockData.changePercent,
+              marketCap: stockData.marketCapFormatted,
+              peRatio: stockData.peRatio,
+              addedAt: item.addedAt,
+            };
+          } catch (error) {
+            // Re-throw rate limit so it surfaces to the page
+            if (error instanceof RateLimitError) throw error;
             return {
               symbol: item.symbol,
               company: item.companyName,
@@ -213,36 +245,14 @@ export const getWatchlistWithData = async () => {
               addedAt: item.addedAt,
             };
           }
-
-          return {
-            company: stockData.company,
-            symbol: stockData.symbol,
-            currentPrice: stockData.currentPrice,
-            priceFormatted: stockData.priceFormatted,
-            changeFormatted: stockData.changeFormatted,
-            changePercent: stockData.changePercent,
-            marketCap: stockData.marketCapFormatted,
-            peRatio: stockData.peRatio,
-            addedAt: item.addedAt,
-          };
-        } catch {
-          return {
-            symbol: item.symbol,
-            company: item.companyName,
-            currentPrice: null,
-            priceFormatted: "N/A",
-            changeFormatted: "N/A",
-            changePercent: null,
-            marketCap: "N/A",
-            peRatio: null,
-            addedAt: item.addedAt,
-          };
-        }
-      }),
-    );
+        }),
+      );
+      stocksWithData.push(...chunkResults);
+    }
 
     return JSON.parse(JSON.stringify(stocksWithData));
   } catch (error) {
+    if (error instanceof RateLimitError) throw error;
     if (process.env.NODE_ENV === "development") {
       console.error("Error loading watchlist:", error);
     }

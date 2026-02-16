@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import WatchlistButton from "@/components/watchlist/WatchlistButton";
 import type { IWatchlistItem } from "@/database/models/watchlist.model";
-import { getStocksDetails } from "@/lib/actions/finnhub.action";
+import { getStocksDetails, RateLimitError } from "@/lib/actions/finnhub.action";
 import { getUserWatchlist } from "@/lib/actions/watchlist.action";
 import {
   BASELINE_WIDGET_CONFIG,
@@ -17,7 +17,27 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
   const { symbol } = await params;
   const scriptUrl = `https://s3.tradingview.com/external-embedding/embed-widget-`;
 
-  const stockData = await getStocksDetails(symbol.toUpperCase());
+  let stockData: Awaited<ReturnType<typeof getStocksDetails>> = null;
+  try {
+    stockData = await getStocksDetails(symbol.toUpperCase());
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4 max-w-md px-4">
+            <h2 className="text-xl font-semibold text-yellow-400">
+              API Rate Limit Exceeded
+            </h2>
+            <p className="text-gray-400">
+              Too many requests. Please try again in a few minutes.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    throw error;
+  }
+
   if (!stockData || !stockData.symbol) notFound();
 
   const watchlist = await getUserWatchlist();

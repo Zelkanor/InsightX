@@ -3,6 +3,7 @@
 import { Loader2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -52,8 +53,13 @@ export default function SearchCommand({
     try {
       const results = await searchStocks(searchTerm.trim());
       setStocks(results);
-    } catch {
+    } catch (error) {
       setStocks([]);
+      const message =
+        error instanceof Error ? error.message : String(error);
+      if (message.includes("rate limit") || message.includes("Rate")) {
+        toast.error("API limit exceeded. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }

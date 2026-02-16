@@ -188,10 +188,10 @@ declare global {
 
   type AlertData = {
     symbol: string;
-    company: string;
+    companyName: string;
     alertName: string;
-    alertType: "upper" | "lower";
-    threshold: string;
+    condition: "above" | "below";
+    threshold: number;
   };
 
   type AlertModalProps = {
