@@ -308,6 +308,9 @@
   .table-header-row {
     @apply text-gray-400 font-medium bg-gray-700 border-b border-gray-600 hover:bg-gray-700;
   }
+  .table-header {
+    @apply text-center;
+  }
   .table-header:first-child {
     @apply pl-4;
   }
@@ -315,10 +318,10 @@
     @apply border-b cursor-pointer text-gray-100 border-gray-600 hover:bg-gray-700/50 transition-colors;
   }
   .table-cell {
-    @apply font-medium text-base
+    @apply font-medium text-base border-r text-center whitespace-nowrap
   }
   .add-alert {
-    @apply flex text-sm items-center whitespace-nowrap gap-1.5 px-3 w-fit py-2 text-yellow-600 border border-yellow-600/20 rounded font-medium bg-transparent hover:bg-transparent cursor-pointer transition-colors;
+    @apply flex text-sm items-center whitespace-nowrap mx-auto gap-1.5 px-3 w-fit py-2 text-yellow-600 border border-yellow-600/20 rounded font-medium bg-transparent hover:bg-transparent cursor-pointer transition-colors;
   }
   .watchlist-news {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
@@ -348,7 +351,7 @@
     @apply text-xl font-semibold text-gray-100;
   }
   .alert-list {
-    @apply overflow-y-auto w-full! max-h-100 rounded-lg flex border border-gray-600 flex-col gap-4 bg-gray-800 p-3 flex-1;
+    @apply overflow-y-auto w-full! max-h-215 rounded-lg flex border border-gray-600 flex-col gap-4 bg-gray-800 p-3 flex-1;
   }
   .alert-empty {
     @apply px-6 py-8 text-center text-gray-500/50;

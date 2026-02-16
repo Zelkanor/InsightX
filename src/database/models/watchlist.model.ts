@@ -1,25 +1,77 @@
-import { type Document, type Model, model, models, Schema } from "mongoose";
+import mongoose, { type Document, Schema, type Types } from "mongoose";
 
-export interface WatchlistItem extends Document {
-  userId: string;
+export interface IWatchlistItem {
   symbol: string;
-  company: string;
+  companyName: string;
   addedAt: Date;
 }
 
-const WatchlistSchema = new Schema<WatchlistItem>(
+export interface IWatchlist extends Document {
+  userId: Types.ObjectId;
+  items: IWatchlistItem[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const WatchlistItemSchema = new Schema<IWatchlistItem>(
   {
-    userId: { type: String, required: true, index: true },
-    symbol: { type: String, required: true, uppercase: true, trim: true },
-    company: { type: String, required: true, trim: true },
-    addedAt: { type: Date, default: Date.now },
+    symbol: {
+      type: String,
+      required: [true, "Stock symbol is required"],
+      uppercase: true,
+      trim: true,
+      maxlength: [10, "Symbol cannot exceed 10 characters"],
+    },
+    companyName: {
+      type: String,
+      required: [true, "Company name is required"],
+      trim: true,
+      maxlength: [200, "Company name cannot exceed 200 characters"],
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now,
+      immutable: true,
+    },
   },
-  { timestamps: false },
+  { _id: false },
 );
 
-// Prevent duplicate symbols per user
-WatchlistSchema.index({ userId: 1, symbol: 1 }, { unique: true });
+const WatchlistSchema = new Schema<IWatchlist>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: [true, "User ID is required"],
+      ref: "User",
+      unique: true,
+      index: true,
+    },
+    items: {
+      type: [WatchlistItemSchema],
+      default: [],
+      validate: [
+        {
+          validator: (items: IWatchlistItem[]) => items.length <= 120,
+          message: "Watchlist cannot exceed 120 stocks.",
+        },
+        {
+          validator: (items: IWatchlistItem[]) => {
+            // Prevent duplicate symbols within a single watchlist
+            const symbols = items.map((item) => item.symbol);
+            return new Set(symbols).size === symbols.length;
+          },
+          message: "Duplicate symbols are not allowed in the watchlist.",
+        },
+      ],
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-export const Watchlist: Model<WatchlistItem> =
-  (models?.Watchlist as Model<WatchlistItem>) ||
-  model<WatchlistItem>("Watchlist", WatchlistSchema);
+WatchlistSchema.index({ userId: 1, "items.symbol": 1 });
+
+export const Watchlist =
+  mongoose.models.Watchlist ||
+  mongoose.model<IWatchlist>("Watchlist", WatchlistSchema);
