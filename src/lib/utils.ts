@@ -120,7 +120,7 @@ export const formatPrice = (price: number) => {
 };
 
 export const getAlertText = (alert: Alert) => {
-  const condition = alert.alertType === "upper" ? ">" : "<";
+  const condition = alert.condition === "above" ? ">" : "<";
   return `Price ${condition} ${formatPrice(alert.threshold)}`;
 };
 
