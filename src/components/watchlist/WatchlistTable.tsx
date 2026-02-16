@@ -33,9 +33,17 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
           <TableRow
             key={item.symbol}
             className="table-row"
+            tabIndex={0}
+            aria-label={`View ${item.company} (${item.symbol})`}
             onClick={() =>
               router.push(`/stocks/${encodeURIComponent(item.symbol)}`)
             }
+            onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push(`/stocks/${encodeURIComponent(item.symbol)}`);
+              }
+            }}
           >
             <TableCell className="table-cell">
               <WatchlistButton
@@ -64,7 +72,13 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
             </TableCell>
             <TableCell className="table-cell">{item.peRatio || "—"}</TableCell>
             <TableCell>
-              <Button className="add-alert">Add Alert</Button>
+              <Button
+                className="add-alert"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                Add Alert
+              </Button>
             </TableCell>
           </TableRow>
         ))}

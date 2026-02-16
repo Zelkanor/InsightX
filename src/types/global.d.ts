@@ -217,10 +217,10 @@ declare global {
   type Alert = {
     id: string;
     symbol: string;
-    company: string;
+    companyName: string;
     alertName: string;
     currentPrice: number;
-    alertType: "upper" | "lower";
+    condition: "above" | "below";
     threshold: number;
     changePercent?: number;
   };

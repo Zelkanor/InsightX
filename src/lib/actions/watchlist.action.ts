@@ -4,7 +4,10 @@ import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { Watchlist } from "@/database/models/watchlist.model";
+import {
+  type IWatchlistItem,
+  Watchlist,
+} from "@/database/models/watchlist.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { auth } from "@/lib/better-auth/auth";
 import { getStocksDetails } from "./finnhub.action";
@@ -44,8 +47,8 @@ export const getWatchlistSymbolsByEmail = async (
     const userId = (user.id as string) || String(user._id || "");
     if (!userId) return [];
 
-    const items = await Watchlist.find({ userId }, { symbol: 1 }).lean();
-    return items.map((i) => String(i.symbol));
+    const doc = await Watchlist.findOne({ userId }, { items: 1 }).lean();
+    return doc?.items?.map((i: IWatchlistItem) => String(i.symbol)) ?? [];
   } catch (err) {
     if (process.env.NODE_ENV === "development") {
       console.error("getWatchlistSymbolsByEmail error:", err);
@@ -113,6 +116,7 @@ export const addToWatchlist = async (symbol: string, company: string) => {
     );
 
     revalidatePath("/watchlist");
+    revalidatePath("/", "layout");
     return { success: true, message: "Stock added to watchlist" };
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
@@ -142,6 +146,7 @@ export const removeFromWatchlist = async (symbol: string) => {
       { $pull: { items: { symbol: symbol.toUpperCase() } } },
     );
     revalidatePath("/watchlist");
+    revalidatePath("/", "layout");
 
     return { success: true, message: "Stock removed from watchlist" };
   } catch (error) {
@@ -191,34 +196,48 @@ export const getWatchlistWithData = async () => {
 
     const stocksWithData = await Promise.all(
       sorted.map(async (item) => {
-        const stockData = await getStocksDetails(item.symbol);
+        try {
+          const stockData = await getStocksDetails(item.symbol);
 
-        // Fallback if Finnhub data is unavailable
-        if (!stockData) {
+          // Fallback if Finnhub data is unavailable
+          if (!stockData) {
+            return {
+              symbol: item.symbol,
+              company: item.companyName,
+              currentPrice: null,
+              priceFormatted: "N/A",
+              changeFormatted: "N/A",
+              changePercent: null,
+              marketCap: "N/A",
+              peRatio: null,
+              addedAt: item.addedAt,
+            };
+          }
+
+          return {
+            company: stockData.company,
+            symbol: stockData.symbol,
+            currentPrice: stockData.currentPrice,
+            priceFormatted: stockData.priceFormatted,
+            changeFormatted: stockData.changeFormatted,
+            changePercent: stockData.changePercent,
+            marketCap: stockData.marketCapFormatted,
+            peRatio: stockData.peRatio,
+            addedAt: item.addedAt,
+          };
+        } catch {
           return {
             symbol: item.symbol,
-            companyName: item.companyName,
-            addedAt: item.addedAt,
+            company: item.companyName,
             currentPrice: null,
             priceFormatted: "N/A",
             changeFormatted: "N/A",
             changePercent: null,
             marketCap: "N/A",
             peRatio: null,
+            addedAt: item.addedAt,
           };
         }
-
-        return {
-          company: stockData.company,
-          symbol: stockData.symbol,
-          currentPrice: stockData.currentPrice,
-          priceFormatted: stockData.priceFormatted,
-          changeFormatted: stockData.changeFormatted,
-          changePercent: stockData.changePercent,
-          marketCap: stockData.marketCapFormatted,
-          peRatio: stockData.peRatio,
-          addedAt: item.addedAt,
-        };
       }),
     );
 

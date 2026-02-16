@@ -234,7 +234,7 @@ export const getStocksDetails = cache(async (symbol: string) => {
       "Error in stock search:",
       new Error("FINNHUB API key is not configured"),
     );
-    return {};
+    return null;
   }
 
   try {

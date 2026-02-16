@@ -24,8 +24,14 @@ export default function SearchCommand({
   const [loading, setLoading] = useState(false);
   const [stocks, setStocks] =
     useState<StockWithWatchlistStatus[]>(initialStocks);
-
   const isSearchMode = !!searchTerm.trim();
+
+  useEffect(() => {
+    if (!isSearchMode) {
+      setStocks(initialStocks);
+    }
+  }, [initialStocks, isSearchMode]);
+
   const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10);
 
   useEffect(() => {
@@ -55,9 +61,10 @@ export default function SearchCommand({
 
   const debouncedSearch = useDebounce(handleSearch, 300);
 
-  useEffect(() => {
+  const handleSearchTermChange = (value: string) => {
+    setSearchTerm(value);
     debouncedSearch();
-  }, [debouncedSearch]);
+  };
 
   const handleSelectStock = () => {
     setOpen(false);
@@ -68,10 +75,10 @@ export default function SearchCommand({
   // Handle watchlist changes status change
   const handleWatchlistChange = async (symbol: string, isAdded: boolean) => {
     // Update current stocks
-    setStocks(
-      initialStocks?.map((stock) =>
+    setStocks((prev) =>
+      prev.map((stock) =>
         stock.symbol === symbol ? { ...stock, isInWatchlist: isAdded } : stock,
-      ) || [],
+      ),
     );
   };
 
@@ -98,13 +105,13 @@ export default function SearchCommand({
         <div className="search-field">
           <CommandInput
             value={searchTerm}
-            onValueChange={setSearchTerm}
+            onValueChange={handleSearchTermChange}
             placeholder="Search stocks..."
             className="search-input"
           />
           {loading && <Loader2 className="search-loader" />}
         </div>
-        <CommandList className="search-list">
+        <CommandList className="search-list scrollbar-hide-default">
           {loading ? (
             <CommandEmpty className="search-list-empty">
               Loading stocks...
@@ -115,10 +122,10 @@ export default function SearchCommand({
             </div>
           ) : (
             <ul>
-              <div className="search-count">
+              <li className="search-count">
                 {isSearchMode ? "Search results" : "Popular stocks"}
                 {` `}({displayStocks?.length || 0})
-              </div>
+              </li>
               {displayStocks?.map((stock) => (
                 <li key={stock.symbol} className="search-item">
                   <Link

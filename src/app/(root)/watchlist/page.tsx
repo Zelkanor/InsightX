@@ -15,7 +15,7 @@ export default async function WatchlistPage() {
     return (
       <section className="flex watchlist-empty-container">
         <div className="watchlist-empty">
-          <Star className="watchlist-start" />
+          <Star className="watchlist-star" />
           <h2 className="empty-title">Your watchlist is empty</h2>
           <p className="empty-description">
             Start building your watchlist by searching for stocks and clicking

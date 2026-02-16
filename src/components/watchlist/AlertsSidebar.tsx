@@ -36,7 +36,7 @@ export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
         <div className="alert-list scrollbar-hide-default">
           {alertData.map((alert) => {
             const isPositive = (alert.changePercent ?? 0) >= 0;
-            const condition = alert.alertType === "upper" ? ">" : "=";
+            const condition = alert.condition === "above" ? ">" : "<";
             const bgColor = SYMBOL_COLORS[alert.symbol] ?? "bg-gray-600";
 
             return (
@@ -50,7 +50,7 @@ export const AlertsSidebar = ({ alertData }: AlertsListProps) => {
                       {alert.symbol.charAt(0)}
                     </span>
                     <div>
-                      <p className="alert-company">{alert.company}</p>
+                      <p className="alert-company">{alert.companyName}</p>
                       <p className="alert-price">
                         {alert.currentPrice
                           ? formatPrice(alert.currentPrice)
