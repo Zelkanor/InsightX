@@ -10,6 +10,7 @@ import {
   formatMarketCapValue,
   formatPrice,
   getDateRange,
+  RateLimitError,
   type ValidatedArticle,
   validateArticle,
 } from "@/lib/utils";
@@ -17,14 +18,6 @@ import { auth } from "../better-auth/auth";
 import { getWatchlistSymbolsByEmail } from "./watchlist.action";
 
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
-
-// ── Rate-limit error ────────────────────────────────────────────────
-export class RateLimitError extends Error {
-  constructor(message = "API rate limit exceeded. Please try again later.") {
-    super(message);
-    this.name = "RateLimitError";
-  }
-}
 
 // ── Concurrency limiter (p-limit style) ─────────────────────────────
 function createConcurrencyLimiter(concurrency: number) {

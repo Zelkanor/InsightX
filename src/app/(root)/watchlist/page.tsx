@@ -1,15 +1,18 @@
 import { Star } from "lucide-react";
 import SearchCommand from "@/components/SearchCommand";
-//import { AlertsSidebar } from "@/components/watchlist/AlertsSidebar";
+import { AlertsSidebar } from "@/components/watchlist/AlertsSidebar";
 // import { WatchlistNews } from "@/components/watchlist/WatchlistNews";
 import { WatchlistTable } from "@/components/watchlist/WatchlistTable";
+import { getUserAlerts } from "@/lib/actions/alerts.action";
 import { searchStocks } from "@/lib/actions/finnhub.action";
 import { getWatchlistWithData } from "@/lib/actions/watchlist.action";
 
 export default async function WatchlistPage() {
-  const watchlist = await getWatchlistWithData();
-  //const alerts = []; // Replace with actual alerts data
-  const initialStocks = await searchStocks();
+  const [watchlist, alerts, initialStocks] = await Promise.all([
+    getWatchlistWithData(),
+    getUserAlerts(),
+    searchStocks(),
+  ]);
 
   if (watchlist.length === 0) {
     return (
@@ -45,9 +48,15 @@ export default async function WatchlistPage() {
         </div>
 
         {/* Alerts Sidebar */}
-        {/* <div className="watchlist-alerts flex">
-          <AlertsSidebar alertData={alerts} />
-        </div> */}
+        <div className="watchlist-alerts flex">
+          <AlertsSidebar
+            alertData={alerts}
+            watchlistStocks={watchlist.map((w: StockWithData) => ({
+              symbol: w.symbol,
+              company: w.company,
+            }))}
+          />
+        </div>
       </div>
 
       {/* Bottom: News */}
