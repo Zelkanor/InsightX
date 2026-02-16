@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +53,29 @@ export default function AlertDialog({
     editAlert?.frequency ?? "once_per_day",
   );
   const [loading, setLoading] = useState(false);
+
+  // Reset form state when dialog opens/closes or relevant props change
+  useEffect(() => {
+    if (open) {
+      setSelectedStock(
+        editAlert?.symbol
+          ? `${editAlert.symbol}|${editAlert.companyName}`
+          : defaultSymbol
+            ? `${defaultSymbol}|${defaultCompany}`
+            : "",
+      );
+      setCondition(editAlert?.condition ?? "above");
+      setTargetPrice(
+        editAlert?.threshold?.toString() ?? defaultPrice?.toString() ?? "",
+      );
+      setFrequency(editAlert?.frequency ?? "once_per_day");
+    } else {
+      setSelectedStock("");
+      setCondition("above");
+      setTargetPrice("");
+      setFrequency("once_per_day");
+    }
+  }, [open, editAlert, defaultSymbol, defaultCompany, defaultPrice]);
 
   // Derive symbol/company from the stock picker or props
   const getSymbolAndCompany = () => {
