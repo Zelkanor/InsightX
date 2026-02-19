@@ -13,7 +13,7 @@ export const signUpWithEmail = async ({
   preferredIndustry,
 }: SignUpFormData) => {
   try {
-    if (!auth?.api?.signUpEmail) {
+    if (!auth?.api.signUpEmail) {
       return {
         success: false,
         error: "Auth not initialized. Please try again.",

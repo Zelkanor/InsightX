@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Star } from "lucide-react";
 import SearchCommand from "@/components/SearchCommand";
 import { AlertsSidebar } from "@/components/watchlist/AlertsSidebar";
